@@ -32,105 +32,105 @@
 
 
 const path = require('path'),
-    util = require('util'),
-    fs = require('fs');
+  util = require('util'),
+  fs = require('fs')
 
 class Filoggy {
-  // Log levels
-  static levels = ['fatal', 'error', 'warn', 'info', 'debug'];
 
   constructor (outputFile) {
+    this.levels = ['fatal', 'error', 'warn', 'info', 'debug']
     // default write is STDOUT
-    this.write = util.print;
-    this.defaultLogLevel = 'debug';
+    this.write = util.print
+    this.defaultLogLevel = 'debug'
 
     if (outputFile === undefined) {
-      this.write('[INFO] No output file provided.  Logging we be done on STDOUT only' + "\n");
+      this.write('[INFO] No output file provided.  Logging we be done on STDOUT only' + '\n')
     } else {
       // Write to a file
-      let logFilePath = path.normalize(outputFile);
-      this.stream = fs.createWriteStream(logFilePath, {flags: 'a', encoding: 'utf8', mode: 666});
-      this.stream.write("\n");
+      let logFilePath = path.normalize(outputFile)
+      this.stream = fs.createWriteStream(logFilePath, {flags: 'a', encoding: 'utf8', mode: 666})
+      this.stream.write('\n')
 
       this.write = function (text) {
-        this.stream.write(text);
-      };
+        this.stream.write(text)
+      }
     }
   }
 
-  setDefaultLogLevel(level) {
-    if (Filoggy.levels.indexOf(level) === -1) {
-      this.write('[NOTICE] Provided level is not a valid log level');
-      return false;
+  static formatLog (level, message, context) {
+    return [new Date(), ('[' + level.toUpperCase() + ']'), message, context].join(' ')
+  }
+
+  setDefaultLogLevel (level) {
+    if (this.levels.indexOf(level) === -1) {
+      this.write('[NOTICE] Provided level is not a valid log level')
+      return false
     }
-    this.defaultLogLevel = level;
-    return true;
+    this.defaultLogLevel = level
+    return true
   }
 
-  getDefaultLogLevel() {
-    return this.defaultLogLevel;
+  getDefaultLogLevel () {
+    return this.defaultLogLevel
   }
 
-  debug(message, context) {
-    this.log('debug', message, context);
+  debug (message, context) {
+    this.log('debug', message, context)
   }
 
-  info(message, context) {
-    this.log('info', message, context);
+  info (message, context) {
+    this.log('info', message, context)
   }
 
-  warning(message, context) {
-    this.log('warn', message, context);
+  warning (message, context) {
+    this.log('warn', message, context)
   }
 
-  error(message, context) {
-    this.log('error', message, context);
+  error (message, context) {
+    this.log('error', message, context)
   }
 
-  fatal(message, context) {
-    this.log('fatal', message, context);
+  fatal (message, context) {
+    this.log('fatal', message, context)
   }
 
-  log(level, message, context) {
-    let internalLevel = level;
+  log (level, message, context) {
+    let internalLevel = level
     // Checking level
-    if (Filoggy.levels.indexOf(internalLevel) === -1) {
-      this.write('[NOTICE] Invalid level provided.  Using default logging level');
-      internalLevel = this.defaultLogLevel;
+    if (this.levels.indexOf(internalLevel) === -1) {
+      this.write('[NOTICE] Invalid level provided.  Using default logging level')
+      internalLevel = this.defaultLogLevel
     }
 
     // Checking message
     if (message === undefined) {
-      this.write('[ERROR] No message provided!');
-      return false;
+      this.write('[ERROR] No message provided!')
+      return false
     }
     if (typeof message === 'object') {
-      message = JSON.parse(message);
+      message = JSON.parse(message)
     } else {
-      message = message.toString();
+      message = message.toString()
     }
 
     if (context !== undefined) {
       if (typeof context === 'object') {
-        context = JSON.parse(context);
+        context = JSON.parse(context)
       } else {
-        context = context.toString();
+        context = context.toString()
       }
     } else {
-      context = '[]';
+      context = '[]'
     }
 
     const logLine = Filoggy.formatLog(internalLevel, message, context)
-    this.write(logLine);
-  }
-
-  static formatLog(level, message, context) {
-    return [new Date(), ('[' + level + ']'), message, context].join(' ');
+    this.write(logLine)
   }
 }
 
-export default Filoggy;
-
-exports.createLogger = function(logfile) {
-  return new Filoggy(logfile);
+module.exports = {
+  class: Filoggy,
+  createLogger: function (logFile) {
+    return new Filoggy(logFile)
+  }
 }
