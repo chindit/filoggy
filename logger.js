@@ -1,118 +1,136 @@
-// name: logger.js
-// version: 0.0.2
-// http://github.com/chindit/loggy
-/*
+/**
+ * Name: filoggy
+ * Version: 1.0.0
+ * Site: https://github.com/chindit/filoggy
+ * Licence: AGPL v3
+ * Author: David Lumaye
+ */
+/**
+ * Copyright (c) 2018 David Lumaye
 
-Copyright (c) 2010 Aaron Quint
-Copyright (c) 2018 David Lumaye
+ Permission is hereby granted, free of charge, to any person
+ obtaining a copy of this software and associated documentation
+ files (the "Software"), to deal in the Software without
+ restriction, including without limitation the rights to use,
+ copy, modify, merge, publish, distribute, sublicense, and/or sell
+ copies of the Software, and to permit persons to whom the
+ Software is furnished to do so, subject to the following
+ conditions:
 
-Permission is hereby granted, free of charge, to any person
-obtaining a copy of this software and associated documentation
-files (the "Software"), to deal in the Software without
-restriction, including without limitation the rights to use,
-copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the
-Software is furnished to do so, subject to the following
-conditions:
+ The above copyright notice and this permission notice shall be
+ included in all copies or substantial portions of the Software.
 
-The above copyright notice and this permission notice shall be
-included in all copies or substantial portions of the Software.
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+ OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+ HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ OTHER DEALINGS IN THE SOFTWARE.
+ */
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
-OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
-HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
-OTHER DEALINGS IN THE SOFTWARE.
-
-*/
 
 const path = require('path'),
     util = require('util'),
     fs = require('fs');
 
-const makeArray = function (nonarray) {
-    return Array.prototype.slice.call(nonarray);
-};
+class Filoggy {
+  // Log levels
+  static levels = ['fatal', 'error', 'warn', 'info', 'debug'];
 
-// Create a new instance of Logger, logging to the file at `log_file_path`
-// if `log_file_path` is null, log to STDOUT.
-const Logger = function (log_file_path) {
+  constructor (outputFile) {
     // default write is STDOUT
     this.write = util.print;
-    this.log_level_index = 3;
+    this.defaultLogLevel = 'debug';
 
-    // if a path is given, try to write to it
-    if (log_file_path) {
-        // Write to a file
-        log_file_path = path.normalize(log_file_path);
-        this.stream = fs.createWriteStream(log_file_path, {flags: 'a', encoding: 'utf8', mode: 666});
-        this.stream.write("\n");
-        this.write = function (text) {
-            this.stream.write(text);
-        };
+    if (outputFile === undefined) {
+      this.write('[INFO] No output file provided.  Logging we be done on STDOUT only' + "\n");
+    } else {
+      // Write to a file
+      let logFilePath = path.normalize(outputFile);
+      this.stream = fs.createWriteStream(logFilePath, {flags: 'a', encoding: 'utf8', mode: 666});
+      this.stream.write("\n");
+
+      this.write = function (text) {
+        this.stream.write(text);
+      };
     }
-};
-
-Logger.levels = ['fatal', 'error', 'warn', 'info', 'debug'];
-
-// The default log formatting function. The default format looks something like:
-//
-//    error [Sat Jun 12 2010 01:12:05 GMT-0400 (EDT)] message
-// 
-Logger.prototype.format = function(level, date, message) {
-  return [level, ' [', date, '] ', message].join('');
-};
-
-// Set the maximum log level. The default level is "info".
-Logger.prototype.setLevel = function(new_level) {
-    const index = Logger.levels.indexOf(new_level);
-    return (index !== -1) ? this.log_level_index = index : false;
-};
-
-// The base logging method. If the first argument is one of the levels, it logs
-// to that level, otherwise, logs to the default level. Can take `n` arguments
-// and joins them by ' '. If the argument is not a string, it runs `sys.inspect()`
-// to print a string representation of the object.
-Logger.prototype.log = function() {
-    let args = makeArray(arguments),
-        log_index = Logger.levels.indexOf(args[0]),
-        message = '';
-
-    // if you're just default logging
-  if (log_index === -1) { 
-    log_index = this.log_level_index; 
-  } else {
-    // the first arguement actually was the log level
-    args.shift();
   }
-  if (log_index <= this.log_level_index) {
-    // join the arguments into a loggable string
-    args.forEach(function(arg) {
-      if (typeof arg === 'string') {
-        message += ' ' + arg;
+
+  setDefaultLogLevel(level) {
+    if (Filoggy.levels.indexOf(level) === -1) {
+      this.write('[NOTICE] Provided level is not a valid log level');
+      return false;
+    }
+    this.defaultLogLevel = level;
+    return true;
+  }
+
+  getDefaultLogLevel() {
+    return this.defaultLogLevel;
+  }
+
+  debug(message, context) {
+    this.log('debug', message, context);
+  }
+
+  info(message, context) {
+    this.log('info', message, context);
+  }
+
+  warning(message, context) {
+    this.log('warn', message, context);
+  }
+
+  error(message, context) {
+    this.log('error', message, context);
+  }
+
+  fatal(message, context) {
+    this.log('fatal', message, context);
+  }
+
+  log(level, message, context) {
+    let internalLevel = level;
+    // Checking level
+    if (Filoggy.levels.indexOf(internalLevel) === -1) {
+      this.write('[NOTICE] Invalid level provided.  Using default logging level');
+      internalLevel = this.defaultLogLevel;
+    }
+
+    // Checking message
+    if (message === undefined) {
+      this.write('[ERROR] No message provided!');
+      return false;
+    }
+    if (typeof message === 'object') {
+      message = JSON.parse(message);
+    } else {
+      message = message.toString();
+    }
+
+    if (context !== undefined) {
+      if (typeof context === 'object') {
+        context = JSON.parse(context);
       } else {
-        message += ' ' + util.inspect(arg, false, null);
+        context = context.toString();
       }
-    });
-    message = this.format(Logger.levels[log_index], new Date(), message);
-    this.write(message + "\n");
-    return message;
+    } else {
+      context = '[]';
+    }
+
+    const logLine = Filoggy.formatLog(internalLevel, message, context)
+    this.write(logLine);
   }
-  return false;
-};
 
-Logger.levels.forEach(function(level) {
-  Logger.prototype[level] = function() {
-    let args = makeArray(arguments);
-    args.unshift(level);
-    return this.log.apply(this, args);
-  };
-});
+  static formatLog(level, message, context) {
+    return [new Date(), ('[' + level + ']'), message, context].join(' ');
+  }
+}
 
-exports.Logger = Logger;
-exports.createLogger = function(log_file_path) {
-  return new Logger(log_file_path);
-};
+export default Filoggy;
+
+exports.createLogger = function(logfile) {
+  return new Filoggy(logfile);
+}
