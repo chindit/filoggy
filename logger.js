@@ -1,9 +1,10 @@
 // name: logger.js
-// version: 0.0.1
-// http://github.com/quirkey/node-logger
+// version: 0.0.2
+// http://github.com/chindit/loggy
 /*
 
 Copyright (c) 2010 Aaron Quint
+Copyright (c) 2018 David Lumaye
 
 Permission is hereby granted, free of charge, to any person
 obtaining a copy of this software and associated documentation
