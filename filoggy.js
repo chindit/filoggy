@@ -1,6 +1,6 @@
 /**
  * Name: filoggy
- * Version: 1.0.0
+ * Version: 1.0.1
  * Site: https://github.com/chindit/filoggy
  * Licence: AGPL v3
  * Author: David Lumaye
