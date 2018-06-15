@@ -108,14 +108,14 @@ class Filoggy {
       return false
     }
     if (typeof message === 'object') {
-      message = JSON.parse(message)
+      message = JSON.stringify(message)
     } else {
       message = message.toString()
     }
 
     if (context !== undefined) {
       if (typeof context === 'object') {
-        context = JSON.parse(context)
+        context = JSON.stringify(context)
       } else {
         context = context.toString()
       }
