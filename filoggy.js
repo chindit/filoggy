@@ -1,6 +1,6 @@
 /**
  * Name: filoggy
- * Version: 1.0.2
+ * Version: 1.0.3
  * Site: https://github.com/chindit/filoggy
  * Licence: AGPL v3
  * Author: David Lumaye
@@ -48,7 +48,18 @@ class Filoggy {
     } else {
       // Write to a file
       let logFilePath = path.normalize(outputFile);
-      this.stream = fs.createWriteStream(logFilePath, {flags: 'a', encoding: 'utf8', mode: 666});
+
+      fs.access(logFilePath, fs.constants.W_OK, function(err) {
+        if (err) {
+          console.error('Your destination path is not writable');
+          process.exit(1);
+        }
+      });
+
+      this.stream = fs.createWriteStream(logFilePath, {flags: 'a', encoding: 'utf8', mode: 666}).on('error', function (err) {
+        console.error('Unable to write log.');
+        console.error(err);
+      });
       this.stream.write('\n');
 
       this.write = function (text) {
