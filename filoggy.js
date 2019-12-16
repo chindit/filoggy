@@ -1,6 +1,6 @@
 /**
  * Name: filoggy
- * Version: 1.0.1
+ * Version: 1.0.2
  * Site: https://github.com/chindit/filoggy
  * Licence: AGPL v3
  * Author: David Lumaye
@@ -33,104 +33,104 @@
 
 const path = require('path'),
   util = require('util'),
-  fs = require('fs')
+  fs = require('fs');
 
 class Filoggy {
 
   constructor (outputFile) {
-    this.levels = ['fatal', 'error', 'warn', 'info', 'debug']
+    this.levels = ['fatal', 'error', 'warn', 'info', 'debug'];
     // default write is STDOUT
-    this.write = util.print
-    this.defaultLogLevel = 'debug'
+    this.write = util.print;
+    this.defaultLogLevel = 'warning';
 
     if (outputFile === undefined) {
-      this.write('[INFO] No output file provided.  Logging we be done on STDOUT only' + '\n')
+      this.write('[INFO] No output file provided.  Logging we be done on STDOUT only' + '\n');
     } else {
       // Write to a file
-      let logFilePath = path.normalize(outputFile)
-      this.stream = fs.createWriteStream(logFilePath, {flags: 'a', encoding: 'utf8', mode: 666})
-      this.stream.write('\n')
+      let logFilePath = path.normalize(outputFile);
+      this.stream = fs.createWriteStream(logFilePath, {flags: 'a', encoding: 'utf8', mode: 666});
+      this.stream.write('\n');
 
       this.write = function (text) {
-        this.stream.write(text)
+        this.stream.write(text);
       }
     }
   }
 
   static formatLog (level, message, context) {
-    return [new Date(), ('[' + level.toUpperCase() + ']'), message, context].join(' ')
+    return [new Date(), ('[' + level.toUpperCase() + ']'), message, context].join(' ');
   }
 
   setDefaultLogLevel (level) {
     if (this.levels.indexOf(level) === -1) {
-      this.write('[NOTICE] Provided level is not a valid log level')
-      return false
+      this.write('[NOTICE] Provided level is not a valid log level');
+      return false;
     }
-    this.defaultLogLevel = level
-    return true
+    this.defaultLogLevel = level;
+    return true;
   }
 
   getDefaultLogLevel () {
-    return this.defaultLogLevel
+    return this.defaultLogLevel;
   }
 
   debug (message, context) {
-    this.log('debug', message, context)
+    this.log('debug', message, context);
   }
 
   info (message, context) {
-    this.log('info', message, context)
+    this.log('info', message, context);
   }
 
   warning (message, context) {
-    this.log('warn', message, context)
+    this.log('warn', message, context);
   }
 
   error (message, context) {
-    this.log('error', message, context)
+    this.log('error', message, context);
   }
 
   fatal (message, context) {
-    this.log('fatal', message, context)
+    this.log('fatal', message, context);
   }
 
   log (level, message, context) {
-    let internalLevel = level
+    let internalLevel = level;
     // Checking level
     if (this.levels.indexOf(internalLevel) === -1) {
-      this.write('[NOTICE] Invalid level provided.  Using default logging level')
-      internalLevel = this.defaultLogLevel
+      this.write('[NOTICE] Invalid level provided.  Using default logging level');
+      internalLevel = this.defaultLogLevel;
     }
 
     // Checking message
     if (message === undefined) {
-      this.write('[ERROR] No message provided!')
-      return false
+      this.write('[ERROR] No message provided!');
+      return false;
     }
     if (typeof message === 'object') {
-      message = JSON.stringify(message)
+      message = JSON.stringify(message);
     } else {
-      message = message.toString()
+      message = message.toString();
     }
 
     if (context !== undefined) {
       if (typeof context === 'object') {
-        context = JSON.stringify(context)
+        context = JSON.stringify(context);
       } else {
-        context = context.toString()
+        context = context.toString();
       }
     } else {
-      context = '[]'
+      context = '[]';
     }
 
-    const logLine = Filoggy.formatLog(internalLevel, message, context)
-    this.write(logLine)
+    const logLine = Filoggy.formatLog(internalLevel, message, context);
+    this.write(logLine);
   }
 }
 
 module.exports = {
   class: Filoggy,
   createLogger: function (logFile) {
-    return new Filoggy(logFile)
+    return new Filoggy(logFile);
   }
-}
+};
